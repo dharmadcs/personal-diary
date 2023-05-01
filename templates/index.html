@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta property="og:title" content="@dharmadcs diary" />
+    <meta
+      property="og:description"
+      content="just a small notes of a novice programmer"
+    />
+    <meta
+      property="og:image"
+      content="https://images.unsplash.com/photo-1628258334105-2a0b3d6efee1?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8cHJvZ3JhbW1lciUyMGNvZGV8ZW58MHx8MHx8&auto=format&fit=crop&w=500&q=60"
+    />
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3"
+      crossorigin="anonymous"
+    />
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+      crossorigin="anonymous"
+    ></script>
+
+    <style>
+      img.rounded-circle {
+        border: 2px solid white;
+      }
+
+      h1.display-5 {
+        display: inline-block;
+        background-color: #fff;
+        padding: 5px 10px;
+        border-radius: 5px;
+      }
+    </style>
+
+    <!-- custom-file-library -->
+    <script src="https://cdn.jsdelivr.net/npm/bs-custom-file-input/dist/bs-custom-file-input.js"></script>
+
+    <script>
+      $(document).ready(function () {
+        listing();
+        bsCustomFileInput.init();
+        setBackground();
+
+        // setInterval(setBackground, 10000);
+      });
+
+      function listing() {
+        $.ajax({
+          type: "GET",
+          url: "/diary",
+          data: {},
+          success: function (response) {
+            let articles = response["articles"];
+            for (let i = 0; i < articles.length; i++) {
+              let title = articles[i]["title"];
+              let content = articles[i]["content"];
+              let file = articles[i]["file"];
+              let profile = articles[i]["profile"];
+              let time = articles[i]["time"];
+              let num = articles[i]["num"];
+
+              let temp_html = `
+                <div class="col-4 mb-3">
+                  <div class="card" style="max-height: 500px; overflow: hidden;">
+                    <img src="${file}" style="width: 415px; height: 250px;"></img>
+                    <img src="${profile}" class="rounded-circle" style="position: absolute; top: 10px; right: 10px; width: 70px; height: 70px; object-fit: cover;"></img>
+                    <div class="card-body">
+                      <h4 class="card-title">${title}</h4>
+                      <p class="card-text" style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">${content}</p>
+                      <h6 class="card-subtitle mb-2 text-body-secondary">${time}</h6>
+                      <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modal-${num}">View</button>
+                      <button onclick="delete_diary(${num})" class="btn btn-sm btn-danger" type="button">Delete</button>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Modal -->
+                <div class="modal fade" id="modal-${num}" tabindex="-1" aria-labelledby="modal-${num}-label" aria-hidden="true">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="modal-${num}-label">${title}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                          <p>${content}</p>
+                          <h6 class="modal-title" id="modal-${num}-label">${time}</h5>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              `;
+              $("#card").append(temp_html);
+            }
+          },
+        });
+      }
+
+      function posting() {
+        // buat variable untuk dikirim keserver
+        let title = $("#image-title").val();
+        if (!title) {
+          return alert("masukan judul post");
+        }
+        let content = $("#image-desc").val();
+        if (!content) {
+          return alert("masukan deskripsi post");
+        }
+
+        let file = $("#image-file").prop("files")[0];
+        let profile = $("#profile").prop("files")[0];
+        let form_data = new FormData();
+
+        form_data.append("file_give", file);
+        form_data.append("profile_give", profile);
+        form_data.append("title_give", title);
+        form_data.append("content_give", content);
+
+        $.ajax({
+          type: "POST",
+          url: "/diary",
+          data: form_data,
+          contentType: false,
+          processData: false,
+          success: function (response) {
+            window.location.reload();
+          },
+        });
+      }
+
+      function delete_diary(num) {
+        $.ajax({
+          type: "POST",
+          url: "/delete",
+          data: { num_give: num },
+          success: function (response) {
+            alert(response["msg"]);
+            window.location.reload();
+          },
+        });
+      }
+
+      function setBackground() {
+        $.ajax({
+          url: "https://api.unsplash.com/photos/random?query=diary&client_id=Y-ckaClorN7lJxyr-zxjueq7hiq0VcOb5NV38cNdt7Y",
+          success: function (data) {
+            $("#diary-bg").css(
+              "background-image",
+              "url(" + data.urls.regular + ")"
+            );
+          },
+          error: function (xhr, status, error) {
+            console.log(error);
+          },
+        });
+      }
+    </script>
+
+    <title>Dharma Diary | Create using python and flask</title>
+  </head>
+
+  <body>
+    <div class="container" id="diary-bg">
+      <div class="p-5 mb-4 rounded-3 text-center">
+        <div class="container-fluid py-5">
+          <h1 class="display-5 fw-bold">Dharma Diary</h1>
+
+          <!-- image post-->
+          <div class="input-group mb-3 custom-file">
+            <input type="file" class="form-control" id="image-file" required />
+            <label class="input-group-text" for="image-file">Activity</label>
+          </div>
+
+          <!-- image post-->
+          <div class="input-group mb-3 custom-file">
+            <input type="file" class="form-control" id="profile" required />
+            <label class="input-group-text" for="profile">Profile</label>
+          </div>
+
+          <!-- title -->
+          <div class="input-group mb-3">
+            <input
+              type="text"
+              id="image-title"
+              class="form-control"
+              placeholder="Title for your diary..."
+              aria-describedby="basic-addon1"
+              required
+            />
+          </div>
+
+          <!-- description -->
+          <div class="input-group">
+            <textarea
+              class="form-control"
+              id="image-desc"
+              placeholder="Description of your diary..."
+              style="height: 200px"
+              required
+            ></textarea>
+          </div>
+
+          <!-- button -->
+          <br />
+          <button
+            onclick="posting()"
+            class="btn btn-success btn-lg"
+            type="button"
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <!-- Card Section -->
+      <div id="card" class="row justify-content-start">
+        <!-- content-here -->
+      </div>
+    </div>
+
+  </body>
+</html>
