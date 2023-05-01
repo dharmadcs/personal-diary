@@ -82,7 +82,7 @@
                       <p class="card-text" style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">${content}</p>
                       <h6 class="card-subtitle mb-2 text-body-secondary">${time}</h6>
                       <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modal-${num}">View</button>
-                      <button onclick="delete_diary(${num})" class="btn btn-sm btn-danger" type="button">Delete</button>
+                      <button onclick="confirmDelete(${num})" class="btn btn-sm btn-danger" type="button">Delete</button>
                     </div>
                   </div>
                 </div>
@@ -139,6 +139,14 @@
             window.location.reload();
           },
         });
+      }
+
+      function confirmDelete(num) {
+        if (confirm("Apakah Anda yakin ingin menghapus catatan ini?")) {
+          delete_diary(num);
+        } else {
+          // Do nothing
+        }
       }
 
       function delete_diary(num) {
